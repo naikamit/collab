@@ -39,7 +39,7 @@ class DjController:
         self.playEvent = multiprocessing.Event() # playEvent used in play()
         self.isPlaying = multiprocessing.Value('b', True) #If lock is True (the default) then a new recursive lock object is created to synchronize access to the value. If lock is a Lock or RLock object then that will be used to synchronize access to the value. If lock is False then access to the returned object will not be automatically protected by a lock, so it will not necessarily be “process-safe”.
         self.skipFlag = multiprocessing.Value('b', False)
-        self.queue = Queue(5)     # A blocking queue to pass at most N audio fragments between audio thread and generation thread aka dj_thread?
+        self.queue = Queue(1)     # A blocking queue to pass at most N audio fragments between audio thread and generation thread aka dj_thread?
         # self.currentMasterString = multiprocessing.Manager().Value(ctypes.c_char_p, '') # what? SOMETHING TO mark a playing song as wrongly annotated
 
         # init object properties to be used later
@@ -155,95 +155,123 @@ class DjController:
         random.shuffle(unplayed)
         for s in unplayed:
             print(s.title)
+            # print(s.tempo)
 
         current_song = unplayed.pop()
 
-        trackNo = 6
+        # trackNo = 6
         # current_song = unplayed[trackNo]
 
         current_song.open()
         current_song.openAudio()
         next_song = unplayed.pop()
         next_song.open()
+        # if abs(1-float(current_song.tempo/next_song.tempo)) > 0.05:
+        #     print(abs(1-float(current_song.tempo/next_song.tempo)))
+        #
+        # else:
+        #     print(abs(1 - float(current_song.tempo / next_song.tempo)))
         next_song.openAudio()
 
         cues = current_song.downbeats
         cuesB = next_song.downbeats
-        # stretchedBar = current_song.audio[int(44100 * cues[0]):int(44100 * cues[10])]
-        # toPlayTuple = (stretchedBar, current_song.title, current_song.title)
-        # self.queue.put(toPlayTuple, isPlaying.value)
         bar = 0
 
         while 1:
             originalBPM = current_song.downbeats[bar+8] - current_song.downbeats[bar]
             targetBPM = next_song.downbeats[8] - next_song.downbeats[0]
             f = targetBPM / originalBPM
-            # print(f, abs(1-f),(len(cues)-30) )
-            fSTEP = abs(1-f)/(len(cues))
-            if fSTEP == 0:
-                stepsToStretch = 0
-            else:
-                stepsToStretch = abs(1 - f) / fSTEP
+            print( ">> OriginalBPM:", round(1920/(originalBPM),2), "TargetBPM:", round(1920/(targetBPM),2))
+            fSTEP = abs(1-f)/(len(cues)-8)
+            print(">> Now Playing:",current_song.title, "fstep",fSTEP)
 
-            print("Now Playing:",current_song.title)
-##########################
+            if f < 0.02: #do a perfect beat match
+                if f > 1 + fSTEP: #current song needs to be slowed down by elongating
+                    ff = 1
+                    while bar < len(cues)-9:
+                        ff = ff + fSTEP
+                        stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                        toPlayTuple = (stretchedBar, current_song.title, current_song.title)
+                        self.queue.put(toPlayTuple, isPlaying.value)
+                        bar = bar + 1
+                        print(bar, " slow ", "BPM:", round(44100*240/len(stretchedBar),2), "  ProgressBar%:", round((bar)/(len(cues)) *100,0), )
+                if f < 1 - fSTEP:  #current song needs to be sped up by shortening
+                    ff = 1
+                    while bar < len(cues)-9:
+                        ff = ff - fSTEP
+                        stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                        toPlayTuple = (stretchedBar, current_song.title, current_song.title)
+                        self.queue.put(toPlayTuple, isPlaying.value)
+                        bar = bar + 1
+                        print(bar, " fast ", "BPM:", round(44100*240/len(stretchedBar),2), "  ProgressBar%:", round((bar)/(len(cues)) *100,0))
+                count = 0
+                allstepA = 1
+                allstepB = 0
+                step8 = 0.125
+                while (count < 8): # source sweep
+                    barAall = timestretching2.stretch(current_song,bar, cues, f,"audio")
+                    barBall = next_song.audio[int(44100 * cuesB[count]):int(44100 * cuesB[count + 1])]
+                    # print("before crops: ", len(barAall), len(barBall))
+                    barAall = barAall[:len(barBall), :]
+                    barBall = barBall[:len(barAall), :]
+                    print(bar, " mixx ", "BPM:", round(44100*240/len(barAall),2) , "  ProgressBar%:", round((bar)/(len(cues)) *100,0))
+                    allstepA = allstepA - step8
+                    allstepB = allstepB + step8
+                    barCF = barAall * allstepA + barBall * allstepB
+                    toPlayTuple = (barCF, current_song.title, current_song.title)
+                    self.queue.put(toPlayTuple, isPlaying.value)
+                    bar = bar + 1
+                    count = count + 1
 
-            if f > 1 + fSTEP: #current song needs to be slowed down by elongating
+            else: #dont do a perfect beat match but get the BPM close
+                fSTEP = 0.02
+                if f > 1 + fSTEP:  # current song needs to be slowed down by elongating
+                    ff = 1
+                    while bar < len(cues) - 9:
+                        ff = ff + fSTEP
+                        stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                        toPlayTuple = (stretchedBar, current_song.title, current_song.title)
+                        self.queue.put(toPlayTuple, isPlaying.value)
+                        bar = bar + 1
+                        print(bar, " sl05 ", "BPM:", round(44100 * 240 / len(stretchedBar), 2), "  ProgressBar%:",
+                              round((bar) / (len(cues)) * 100, 0), )
+
+                if f < 1 - fSTEP:  # current song needs to be sped up by shortening
+                    ff = 1
+                    while bar < len(cues) - 9:
+                        ff = ff - fSTEP
+                        stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                        toPlayTuple = (stretchedBar, current_song.title, current_song.title)
+                        self.queue.put(toPlayTuple, isPlaying.value)
+                        bar = bar + 1
+                        print(bar, " fa05 ", "BPM:", round(44100 * 240 / len(stretchedBar), 2), "  ProgressBar%:",
+                              round((bar) / (len(cues)) * 100, 0))
+                count = 0
+                allstepA = 1
+                allstepB = 0
+                step8 = 0.25
                 ff = 1
-                while bar < len(cues)-9:
-                    ff = ff + fSTEP
+                while (count < 4):  # source sweep
                     stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                    stretchedBar = stretchedBar * (1 - count*0.2)
                     toPlayTuple = (stretchedBar, current_song.title, current_song.title)
                     self.queue.put(toPlayTuple, isPlaying.value)
                     bar = bar + 1
-                    print(bar, " slow ", "BPM:", round(44100*240/len(stretchedBar),2), "  ProgressBar%:", round((bar)/(len(cues)) *100,0))
+                    print(bar, " kill ", "BPM:", round(44100 * 240 / len(stretchedBar), 2), "  ProgressBar%:",
+                          round((bar) / (len(cues)) * 100, 0))
+                    count = count + 1
 
-            if f < 1 - fSTEP:  #current song needs to be sped up by shortening
-                ff = 1
-                while bar < len(cues)-9:
-                    ff = ff - fSTEP
-                    stretchedBar = timestretching2.stretch(current_song, bar, cues, ff, "audio")
+                bar = 0
+                while(bar < 5):
+                    stretchedBar = timestretching2.stretch(next_song, bar, cuesB, 1, "audio")
+                    stretchedBar = stretchedBar * ((bar+1) * 0.2)
                     toPlayTuple = (stretchedBar, current_song.title, current_song.title)
                     self.queue.put(toPlayTuple, isPlaying.value)
+                    print(bar, " swel ", "BPM:", round(44100 * 240 / len(stretchedBar), 2), "  ProgressBar%:",
+                      round((bar) / (len(cues)) * 100, 0))
                     bar = bar + 1
-                    print(bar, " fast ", "BPM:", round(44100*240/len(stretchedBar),2), "  ProgressBar%:", round((bar)/(len(cues)) *100,0))
-    # #CF
-    #         originalBPM = current_song.downbeats[bar + 8] - current_song.downbeats[bar]
-    #         targetBPM = next_song.downbeats[8] - next_song.downbeats[0]
-    #         f = originalBPM / targetBPM
-    #         print(f)
+                    count = bar
 
-
-            count = 0
-            allstepA = 1
-            allstepB = 0
-            step8 = 0.125
-
-            while (count < 8): # source sweep
-
-                barAall = timestretching2.stretch(current_song,bar, cues, f,"audio")
-                barBall = next_song.audio[int(44100 * cuesB[count]):int(44100 * cuesB[count + 1])]
-                # print("before crops: ", len(barAall), len(barBall))
-
-                barAall = barAall[:len(barBall), :]
-                barBall = barBall[:len(barAall), :]
-
-                print(bar, " mixx ", "BPM:", round(44100*240/len(stretchedBar),2) , "  ProgressBar%:", round((bar)/(len(cues)) *100,0))
-
-                allstepA = allstepA - step8
-                allstepB = allstepB + step8
-
-                barCF = barAall * allstepA + barBall * allstepB
-
-                toPlayTuple = (barCF, current_song.title, current_song.title)
-                self.queue.put(toPlayTuple, isPlaying.value)
-                bar = bar + 1
-                count = count + 1
-                # print(bar, "sweep")
-                # print(bar, "sweep", round(allstepA,1) , round(vocalstepB,1) , round(otherstepB,1) , round(drumstepB,1) , round(bassstepB,1))
-
-
-            #A fin
             current_song = next_song
             next_song = unplayed.pop()
             next_song.open()

@@ -1,20 +1,28 @@
 INFO:colorlogger:Loading directory /home/amit/120 bpm...
-INFO:colorlogger:Key A:major :	2 songs
-INFO:colorlogger:Key A:minor :	1 songs
-INFO:colorlogger:Key B:minor :	1 songs
-INFO:colorlogger:Key Bb:minor :	1 songs
-INFO:colorlogger:Key C#:major :	1 songs
+INFO:colorlogger:Key A:major :	3 songs
+INFO:colorlogger:Key A:minor :	2 songs
+INFO:colorlogger:Key Ab:major :	1 songs
+INFO:colorlogger:Key Ab:minor :	2 songs
+INFO:colorlogger:Key B:minor :	6 songs
+INFO:colorlogger:Key Bb:minor :	4 songs
+INFO:colorlogger:Key C#:major :	2 songs
+INFO:colorlogger:Key C#:minor :	4 songs
+INFO:colorlogger:Key C:major :	1 songs
 INFO:colorlogger:Key C:minor :	2 songs
 INFO:colorlogger:Key D:major :	1 songs
-INFO:colorlogger:Key D:minor :	1 songs
-INFO:colorlogger:Key E:minor :	2 songs
+INFO:colorlogger:Key D:minor :	2 songs
+INFO:colorlogger:Key E:major :	1 songs
+INFO:colorlogger:Key E:minor :	3 songs
+INFO:colorlogger:Key Eb:major :	2 songs
+INFO:colorlogger:Key Eb:minor :	4 songs
 INFO:colorlogger:Key F#:major :	1 songs
-INFO:colorlogger:Key F:minor :	1 songs
-INFO:colorlogger:Key G:major :	2 songs
-INFO:colorlogger:Key G:minor :	2 songs
-DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Daft Punk - One More Time [HQ].mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
-DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Mark Lower-The Way That I Feel (Original Mix).mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
-DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Tune Maari Entriyaan Song Gunday Ranveer Singh Arjun Kapoor Priyanka Chopra Vishal Dad.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
-DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Paji - Six O_ Clock (Original Mix).mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
-DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Tu Mere Agal Bagal Hai Full Song Video- Phata Poster Nikhla HeroShahid Kapoor, Ileana Mika Singh.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
+INFO:colorlogger:Key F#:minor :	1 songs
+INFO:colorlogger:Key F:major :	1 songs
+INFO:colorlogger:Key F:minor :	5 songs
+INFO:colorlogger:Key G:major :	5 songs
+INFO:colorlogger:Key G:minor :	3 songs
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Jee Ni Karda-Sardar Ka Grandson.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Pardesi-Dev D.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Only Girl-Rihanna.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-f', 'mp3', '-i', '/home/amit/120 bpm/Abhi Toh Party Shuru Hui Hai-Badshah Aastha.mp3', '-acodec', 'pcm_s16le', '-vn', '-f', 'wav', '-'])
 INFO:colorlogger:Goodbye!
